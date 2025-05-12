@@ -19,9 +19,7 @@ export function createTrackElement(track, index, playerInstance) {
     </button>
   `;
 
-  // Добавляем проверку на существование playerInstance
   if (playerInstance && typeof playerInstance.loadTrack === 'function') {
-    // Обработчик для кнопки воспроизведения
     const playBtn = element.querySelector('.play-btn');
     playBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -37,7 +35,6 @@ export function createTrackElement(track, index, playerInstance) {
       playBtn.innerHTML = '<i class="bi bi-pause"></i> Пауза';
     });
 
-    // Обработчик клика по всему элементу
     element.addEventListener('click', (e) => {
       if (!e.target.closest('.play-btn')) {
         playerInstance.loadTrack(

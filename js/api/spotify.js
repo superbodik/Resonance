@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export async function searchSpotify(query) {
-  const token = await getAccessToken(); // замени на свою авторизацию
+  const token = await getAccessToken();
   const res = await axios.get('https://api.spotify.com/v1/search', {
     headers: { Authorization: `Bearer ${token}` },
     params: { q: query, type: 'track', limit: 10 }

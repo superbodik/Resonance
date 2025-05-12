@@ -12,7 +12,6 @@ body {
   padding-bottom: 20px;
 }
 
-/* Player Styles */
 .player-fixed {
   position: fixed;
   bottom: 0;
@@ -174,7 +173,6 @@ body {
   border-radius: 50%;
 }
 
-/* Track List Styles */
 .tracks-list {
   margin-top: 20px;
 }
@@ -284,7 +282,6 @@ body {
   }
 }
 
-/* Search and other styles */
 .search-container {
   margin-bottom: 20px;
   background-color: #1e1e1e;
@@ -313,7 +310,6 @@ body {
   color: #0d6efd !important;
 }
 
-/* Recommendations Styles */
 .recommendations-container {
   background-color: #1e1e1e;
   border-radius: 8px;
@@ -364,7 +360,6 @@ body {
   text-overflow: ellipsis;
 }
 
-/* Loading spinner */
 .loading-spinner {
   display: inline-block;
   width: 2rem;
@@ -392,7 +387,6 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .player-content {
     flex-direction: column;

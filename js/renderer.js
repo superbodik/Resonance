@@ -2,13 +2,12 @@ import { getTracks } from './api/recommendations.js';
 import { createTrackElement } from './ui/elements.js';
 import { MusicPlayer } from './player/Player.js';
 
-// Инициализация плеера
 const player = new MusicPlayer();
-let isSearching = false; // Флаг для предотвращения дублирования поиска
+let isSearching = false;
 
 async function renderTracks() {
   try {
-    const tracks = await getTracks(); // Теперь функция определена
+    const tracks = await getTracks();
     const container = document.getElementById('tracks-container');
     
     if (!container) {
@@ -16,7 +15,7 @@ async function renderTracks() {
       return;
     }
 
-    container.innerHTML = ''; // Очищаем контейнер
+    container.innerHTML = '';
     
     tracks.forEach((track, index) => {
       const element = createTrackElement(track, index, player);
@@ -27,9 +26,7 @@ async function renderTracks() {
   }
 }
 
-// Используем единую функцию для поиска, чтобы избежать дублирования
 async function performSearch() {
-  // Проверяем флаг, чтобы избежать повторного запуска поиска
   if (isSearching) return;
   
   try {
@@ -45,20 +42,17 @@ async function performSearch() {
   }
 }
 
-// Обработчик для кнопки поиска
 document.getElementById('search-btn')?.addEventListener('click', performSearch);
 
-// Обработчик для Enter в поле поиска
 document.getElementById('search-input')?.addEventListener('keypress', async (e) => {
   if (e.key === 'Enter') {
-    e.preventDefault(); // Предотвращаем стандартное поведение формы
+    e.preventDefault();
     await performSearch();
   }
 });
 
-// Добавляем обработчик для очистки ресурсов при выгрузке страницы
 window.addEventListener('beforeunload', () => {
   if (player) {
-    player.destroy(); // Явно вызываем метод очистки ресурсов
+    player.destroy();
   }
 });

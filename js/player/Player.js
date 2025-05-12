@@ -1,4 +1,3 @@
-// Player.js
 import { searchTracks, getRecommendations } from '../api/soundcloud.js';
 
 const CLIENT_ID = 'AXHkknI02RnaQ0vVJ3FK3pVcoToTlmFK';
@@ -16,7 +15,7 @@ export class MusicPlayer {
     this.isLoading = false;
     this.progressUpdateInterval = null;
     this.widget = null;
-    
+
     this.initElements();
     this.setupEventListeners();
     this.loadInitialContent();
@@ -33,7 +32,6 @@ export class MusicPlayer {
       const script = document.createElement('script');
       script.src = 'https://w.soundcloud.com/player/api.js';
       script.onload = () => {
-        // Даем время для инициализации API
         setTimeout(resolve, 500);
       };
       script.onerror = () => {
@@ -48,7 +46,7 @@ export class MusicPlayer {
     try {
       this.showLoader();
       this.tracks = await searchTracks('popular', CLIENT_ID);
-      
+
       if (this.tracks.length > 0) {
         this.renderTracks();
         const recommendations = await getRecommendations(this.tracks[0].id, CLIENT_ID);
@@ -82,13 +80,13 @@ export class MusicPlayer {
       searchBtn: document.getElementById('search-btn'),
       playerIframe: document.getElementById('sc-player')
     };
-    
+
     if (this.elements.trackAvatar) {
       this.elements.trackAvatar.onerror = () => {
         this.elements.trackAvatar.src = 'assets/default-avatar.png';
       };
     }
-    
+
     if (this.elements.volumeControl) {
       this.elements.volumeControl.value = this.volume;
       this.audio.volume = this.volume;
@@ -97,8 +95,7 @@ export class MusicPlayer {
 
   setupEventListeners() {
     this.clearEventListeners();
-    
-    // UI события
+
     if (this.elements.playBtn) {
       this.elements.playBtn.addEventListener('click', () => this.togglePlay());
     }
@@ -128,7 +125,7 @@ export class MusicPlayer {
         }
       });
     }
-    
+
     this.startProgressUpdate();
   }
 
@@ -141,10 +138,10 @@ export class MusicPlayer {
     if (this.errorTimeout) {
       clearTimeout(this.errorTimeout);
     }
-    
+
     this.handleErrorMessage('Ошибка воспроизведения трека');
     this.errorShown = true;
-    
+
     this.errorTimeout = setTimeout(() => {
       this.errorShown = false;
     }, 3000);
@@ -152,19 +149,19 @@ export class MusicPlayer {
 
   async loadTrack(track) {
     if (this.isLoading) return;
-    
+
     try {
       this.isLoading = true;
       this.pause();
-      
+
       this.currentTrack = track;
       this.currentTrackIndex = this.tracks.findIndex(t => t.id === track.id);
-      
+
       const permalinkUrl = track.permalink_url || `https://soundcloud.com/${track.user?.permalink || 'unknown'}/${track.permalink || track.id}`;
-      
+
       await this.createPlayerIframe(permalinkUrl);
       this.updateTrackInfoUI(track);
-      
+
       await this.play();
       this.loadRecommendations(track.id);
     } catch (error) {
@@ -179,16 +176,13 @@ export class MusicPlayer {
   }
 
   async createPlayerIframe(url) {
-    // Удаляем старый iframe если есть
     if (this.elements.playerIframe) {
       this.elements.playerIframe.remove();
       this.widget = null;
     }
 
-    // Ожидаем загрузку API если нужно
     await this.loadSoundCloudWidgetAPI();
 
-    // Создаем новый iframe
     const iframe = document.createElement('iframe');
     iframe.id = 'sc-player';
     iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&visual=false`;
@@ -199,11 +193,10 @@ export class MusicPlayer {
     iframe.scrolling = 'no';
     iframe.style.display = 'none';
     iframe.allow = 'autoplay';
-    
+
     document.body.appendChild(iframe);
     this.elements.playerIframe = iframe;
-    
-    // Инициализируем плеер
+
     await this.initializeSCPlayer(iframe);
   }
 
@@ -216,14 +209,14 @@ export class MusicPlayer {
       }
 
       this.widget = SC.Widget(iframe);
-      
+
       this.widget.bind(SC.Widget.Events.READY, () => {
         this.widget.setVolume(this.volume * 100);
-        
+
         this.widget.bind(SC.Widget.Events.PLAY, () => {
           this.isPlaying = true;
           this.updatePlayButton();
-          
+
           this.widget.getDuration((duration) => {
             if (this.elements.progressBar) {
               this.elements.progressBar.max = duration / 1000;
@@ -233,16 +226,16 @@ export class MusicPlayer {
             }
           });
         });
-        
+
         this.widget.bind(SC.Widget.Events.PAUSE, () => {
           this.isPlaying = false;
           this.updatePlayButton();
         });
-        
+
         this.widget.bind(SC.Widget.Events.FINISH, () => {
           this.next();
         });
-        
+
         this.widget.bind(SC.Widget.Events.PLAY_PROGRESS, (progress) => {
           if (this.elements.progressBar) {
             this.elements.progressBar.value = progress.currentPosition / 1000;
@@ -262,13 +255,12 @@ export class MusicPlayer {
       if (!this.widget) {
         throw new Error('Плеер не инициализирован');
       }
-      
+
       await new Promise((resolve) => {
         this.widget.play();
         this.isPlaying = true;
         this.updatePlayButton();
-        
-        // Проверяем, что трек действительно начал играть
+
         const checkPlayback = setInterval(() => {
           this.widget.isPaused((paused) => {
             if (!paused) {
@@ -278,13 +270,13 @@ export class MusicPlayer {
           });
         }, 100);
       });
-      
+
       return true;
     } catch (error) {
       console.error('Ошибка воспроизведения:', error);
       this.isPlaying = false;
       this.updatePlayButton();
-      
+
       if (!this.errorShown) {
         this.handleErrorMessage('Не удалось воспроизвести трек');
         this.errorShown = true;
@@ -311,7 +303,7 @@ export class MusicPlayer {
 
   next() {
     if (this.tracks.length === 0 || this.isLoading) return;
-    
+
     const nextIndex = (this.currentTrackIndex + 1) % this.tracks.length;
     this.currentTrackIndex = nextIndex;
     this.loadTrack(this.tracks[this.currentTrackIndex]);
@@ -319,14 +311,14 @@ export class MusicPlayer {
 
   prev() {
     if (this.tracks.length === 0 || this.isLoading) return;
-    
+
     this.currentTrackIndex = (this.currentTrackIndex - 1 + this.tracks.length) % this.tracks.length;
     this.loadTrack(this.tracks[this.currentTrackIndex]);
   }
 
   updatePlayButton() {
     if (!this.elements.playBtn) return;
-    
+
     const icon = this.isPlaying ? 'bi-pause-fill' : 'bi-play-fill';
     this.elements.playBtn.innerHTML = `<i class="bi ${icon}"></i>`;
   }
@@ -353,7 +345,7 @@ export class MusicPlayer {
 
   updateTrackInfoUI(track) {
     if (!this.elements.playerRoot) return;
-    
+
     if (this.elements.trackAvatar) {
       this.elements.trackAvatar.src = track.avatar || 'assets/default-avatar.png';
     }
@@ -367,7 +359,7 @@ export class MusicPlayer {
       this.elements.trackSource.textContent = 'SC';
       this.elements.trackSource.className = 'badge bg-orange';
     }
-    
+
     this.elements.playerRoot.classList.add('show');
     this.updatePlayButton();
   }
@@ -381,13 +373,13 @@ export class MusicPlayer {
   handleErrorMessage(message = 'Произошла ошибка') {
     console.error(message);
     this.pause();
-    
+
     const errorElement = document.createElement('div');
     errorElement.className = 'alert alert-danger position-fixed top-0 end-0 m-3';
     errorElement.textContent = message;
     errorElement.style.zIndex = '1000';
     document.body.appendChild(errorElement);
-    
+
     setTimeout(() => {
       errorElement.remove();
     }, 3000);
@@ -395,16 +387,16 @@ export class MusicPlayer {
 
   async searchTracks(query) {
     if (!query.trim()) return;
-    
+
     try {
       this.showLoader();
       this.tracks = await searchTracks(query, CLIENT_ID);
-      
+
       if (this.tracks.length === 0) {
         this.showError('Ничего не найдено', query);
         return;
       }
-      
+
       this.renderTracks();
       this.loadRecommendations(this.tracks[0].id);
     } catch (error) {
@@ -424,7 +416,7 @@ export class MusicPlayer {
 
   showLoader() {
     if (!this.elements.tracksContainer) return;
-    
+
     this.elements.tracksContainer.innerHTML = `
       <div class="text-center py-4">
         <div class="spinner-border text-primary"></div>
@@ -435,7 +427,7 @@ export class MusicPlayer {
 
   showError(message, query = '') {
     if (!this.elements.tracksContainer) return;
-    
+
     this.elements.tracksContainer.innerHTML = `
       <div class="text-center py-4 text-danger">
         <p>${message}</p>
@@ -446,7 +438,7 @@ export class MusicPlayer {
         ` : ''}
       </div>
     `;
-    
+
     if (query) {
       const retryBtn = document.getElementById('retry-search');
       if (retryBtn) {
@@ -459,13 +451,13 @@ export class MusicPlayer {
 
   renderTracks() {
     if (!this.elements.tracksContainer) return;
-    
+
     const container = this.elements.tracksContainer;
     container.innerHTML = '<h4 class="mb-3">Найденные треки</h4>';
-    
+
     const list = document.createElement('div');
     list.className = 'tracks-list';
-    
+
     this.tracks.forEach((track, index) => {
       const element = document.createElement('div');
       element.className = 'track-container';
@@ -485,14 +477,14 @@ export class MusicPlayer {
           <i class="bi ${this.currentTrack?.id === track.id && this.isPlaying ? 'bi-pause' : 'bi-play'}"></i>
         </button>
       `;
-      
+
       element.addEventListener('click', (e) => {
         if (!e.target.closest('.play-btn') && !this.isLoading) {
           this.currentTrackIndex = index;
           this.loadTrack(track);
         }
       });
-      
+
       const playBtn = element.querySelector('.play-btn');
       if (playBtn) {
         playBtn.addEventListener('click', (e) => {
@@ -502,29 +494,29 @@ export class MusicPlayer {
           this.loadTrack(track);
         });
       }
-      
+
       list.appendChild(element);
     });
-    
+
     container.appendChild(list);
   }
 
   renderRecommendations(recommendations) {
     if (!this.elements.recommendationsContainer) return;
-    
+
     const container = this.elements.recommendationsContainer;
     container.innerHTML = '';
-    
+
     if (!recommendations || recommendations.length === 0) return;
-    
+
     container.innerHTML = `
       <h4 class="mb-3"><i class="bi bi-stars"></i> Рекомендации</h4>
       <div class="recommendations-list"></div>
     `;
-    
+
     const list = container.querySelector('.recommendations-list');
     if (!list) return;
-    
+
     recommendations.forEach(track => {
       const item = document.createElement('div');
       item.className = 'recommendation-item';
@@ -537,7 +529,7 @@ export class MusicPlayer {
           <div class="recommendation-artist">${track.artist}</div>
         </div>
       `;
-      
+
       item.addEventListener('click', () => {
         if (this.isLoading) return;
         const existingIndex = this.tracks.findIndex(t => t.id === track.id);
@@ -550,23 +542,23 @@ export class MusicPlayer {
         }
         this.loadTrack(track);
       });
-      
+
       list.appendChild(item);
     });
   }
-  
+
   destroy() {
     this.pause();
     this.clearEventListeners();
-    
+
     if (this.elements.playerIframe) {
       this.elements.playerIframe.remove();
     }
-    
+
     if (this.errorTimeout) {
       clearTimeout(this.errorTimeout);
     }
-    
+
     console.log('Player resources cleaned up');
   }
 }
